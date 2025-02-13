@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}{{ establecimiento.nombre }}{% endblock %}
+
+{% block content %}
+    <h1>{{ establecimiento.nombre }}</h1>
+    <p>Dirección: {{ establecimiento.direccion }}</p>
+    <p>Descripción: {{ establecimiento.descripcion }}</p>
+    {% if establecimiento.imagen %}
+    <img src="{{ establecimiento.imagen.url }}" alt="{{ establecimiento.nombre }}" width="200">
+    {% endif %}
+
+    {% if establecimiento.administrador == user %}
+        <a href="{% url 'establecimientos:editar_establecimiento' establecimiento.pk %}">Editar</a>
+        <a href="{% url 'establecimientos:eliminar_establecimiento' establecimiento.pk %}">Eliminar</a>
+    {% endif %}
+
+    <a href="{% url 'menu:mostrar_menu' establecimiento.pk %}">Ver Menú</a>
+    <a href="{% url 'establecimientos:lista_establecimientos' %}">Volver a la lista</a>
+{% endblock %}  

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Menú de {{ establecimiento.nombre }}{% endblock %}
+{% block content %}
+<h1>Menú de {{ establecimiento.nombre }}</h1>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% for menu in menus %}
+<h2>{{ menu.nombre }}</h2>
+{% if menu.menuplato_set.all %}
+<ul>
+    {% for menu_plato in menu.menuplato_set.all %}
+    <li>
+        {{ menu_plato.plato.nombre }} -
+        {{ menu_plato.plato.precio|floatformat:2 }} COP
+        {% if menu_plato.plato.imagen %}
+        <img src="{{ menu_plato.plato.imagen.url }}" alt="{{ menu_plato.plato.nombre }}" width="100">
+        {% endif %}
+
+        <form method="post" action="{% url 'menu:agregar_pedido' menu_plato.plato.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="establecimiento_id" value="{{ establecimiento.id }}">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" name="cantidad" value="1" min="1" id="cantidad">
+            <br>
+            <label for="mesa">Mesa:</label>
+            <input type="number" name="mesa" required id="mesa">
+            <br>
+            <button type="submit">Agregar al pedido</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>Este menú no tiene platos asignados.</p>
+{% endif %}
+{% endfor %}
+
+<a href="{% url 'establecimientos:lista_establecimientos' %}">Volver a la lista de restaurantes</a>
+{% endblock %}

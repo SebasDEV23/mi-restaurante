@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Eliminar Establecimiento{% endblock %}
+
+{% block content %}
+    <h1>Eliminar Establecimiento</h1>
+    <p>¿Estás seguro de que quieres eliminar {{ establecimiento.nombre }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Sí, eliminar</button>
+        <a href="{% url 'establecimientos:detalle_establecimiento' establecimiento.pk %}">No, cancelar</a>
+    </form>
+{% endblock %}
