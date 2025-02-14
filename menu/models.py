@@ -3,23 +3,28 @@ from establecimientos.models import Establecimiento
 from django.utils import timezone
 
 
-
-
-class Menu(models.Model):
+class Establecimiento(models.Model):
     nombre = models.CharField(max_length=100)
-    establecimiento = models.ForeignKey(Establecimiento, on_delete=models.CASCADE)
-    platos = models.ManyToManyField('Plato', through='MenuPlato') # Añadimos ManyToManyField
+    direccion = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20)
 
     def __str__(self):
         return self.nombre
 
+class Menu(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True, null=True)
+    establecimiento = models.ForeignKey(Establecimiento, on_delete=models.CASCADE, related_name='menus')  # Relación con Establecimiento
+
+    def __str__(self):
+        return self.nombre
+
+
 class Plato(models.Model):
-    nombre = models.CharField(max_length=200)
-    descripcion = models.TextField(null=True, blank=True)
-    precio = models.DecimalField(max_digits=20, decimal_places=0, default=1000,)
-    moneda = models.CharField(max_length=10, default='COP') 
-    imagen = models.ImageField(null=True, blank=True, upload_to='platos/')
-    categoria = models.CharField(max_length=100, null=True, blank=True)
+    nombre = models.CharField(max_length=100)  # Nombre del plato
+    descripcion = models.TextField(blank=True, null=True)  # Descripción del plato
+    precio = models.DecimalField(max_digits=10, decimal_places=2)  # Precio del plato
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name='platos', blank=True, null=True)  # Relación con el menú
 
     def __str__(self):
         return self.nombre
@@ -37,33 +42,24 @@ class MenuPlato(models.Model):
         return f"{self.menu.nombre} - {self.plato.nombre}"
     
     
+    
 class Pedido(models.Model):
-    mesa = models.IntegerField(null=True, blank=True)
-    platos = models.ManyToManyField(Plato, through='PedidoPlato')
-    establecimiento = models.ForeignKey(Establecimiento, on_delete=models.CASCADE, related_name='pedidos')
-    hora_pedido = models.DateTimeField(default=timezone.now)
-    estado = models.CharField(max_length=50, choices=[
-        ('pendiente', 'Pendiente'),
-        ('preparando', 'Preparando'),
-        ('entregado', 'Entregado'),
-        ('cancelado', 'Cancelado'),
-    ], default='pendiente')
+    ESTADO_CHOICES = [
+        ('Pendiente', 'Pendiente'),
+        ('Completado', 'Completado'),
+    ]
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='Pendiente')
+    fecha_pedido = models.DateTimeField(auto_now_add=True)  # Fecha y hora del pedido
+    mesa = models.CharField(max_length=50, blank=True, null=True)  # Campo para la mesa
+    platos = models.ManyToManyField(Plato, through='PedidoPlato')  # Relación con los platos
 
     def __str__(self):
-        return f"Pedido #{self.id} - Mesa {self.mesa or 'Sin asignar'}"
-
-    def tiempo_transcurrido(self):
-        ahora = timezone.now()
-        tiempo = ahora - self.hora_pedido
-        return tiempo.total_seconds() // 60
+        return f"Pedido {self.id} - {self.estado}"
 
 class PedidoPlato(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    plato = models.ForeignKey(Plato, on_delete=models.CASCADE)
-    cantidad = models.IntegerField(default=1)
-
-    class Meta:
-        unique_together = ('pedido', 'plato')
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)  # Relación con Pedido
+    plato = models.ForeignKey(Plato, on_delete=models.CASCADE)  # Relación con Plato
+    cantidad = models.IntegerField(default=1)  # Cantidad de platos
 
     def __str__(self):
-        return f"{self.pedido} - {self.plato} x {self.cantidad}"
+        return f"{self.cantidad} x {self.plato.nombre} (Pedido {self.pedido.id})"
